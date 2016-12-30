@@ -161,6 +161,8 @@ if !has('gui_running')
 en
 
 let s:ficounts = {}
+let s:fuzdJob = 0
+let s:fuzdChannel = 0
 
 let s:ccex = s:pref.'clear_cache_on_exit'
 
@@ -694,15 +696,18 @@ fu! s:Update(str)
 	if s:validate != '' | let str = call(s:validate, [str]) | en
 	let s:martcs = &scs && str =~ '\u' ? '\C' : ''
 	let pat = s:matcher == {} ? s:SplitPattern(str) : str
-	" ilink use socket communication here
-	" and in the callback do s:Render
+  
+  if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
+    let command = "nc -U ".$HOME."/.fuz/fuz.sock"
+    let s:fuzdJob = job_start(command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
+    let s:fuzdChannel = job_getchannel(s:fuzdJob)
+  else
+    " echom "reusing open channel"
+  endif
 
-  let command = "nc -U /home/ilink/.fuz/fuz.sock"
-  let job = job_start(command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
-	let channel = job_getchannel(job)
 
   " echom str
-  call ch_sendraw(channel, str."\n")
+  call ch_sendraw(s:fuzdChannel, str."\n")
 	" call ch_sendraw(channel, str)
   " cal s:Render([str], pat)
 
