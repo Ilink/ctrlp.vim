@@ -641,11 +641,11 @@ fu! s:Render(lines, pat)
 	en
 	let s:matched = copy(lines)
 	" Sorting
-	if !s:nosort()
-		let s:compat = s:martcs.pat
-		cal sort(lines, 's:mixedsort')
-		unl s:compat
-	en
+	" if !s:nosort()
+	" 	let s:compat = s:martcs.pat
+	" 	cal sort(lines, 's:mixedsort')
+	" 	unl s:compat
+	" en
 	if s:mw_order == 'btt' | cal reverse(lines) | en
 	let s:lines = copy(lines)
 	cal map(lines, s:flfunc)
@@ -660,6 +660,29 @@ fu! s:Render(lines, pat)
 	exe cur_cmd
 endf
 
+fu! StderrHandler(channel, msg)
+	  " let pat = "search str"
+    " let matches = split(a:msg, ',')
+    echom a:msg 
+    " echom len(matches)
+    " echom matches
+    " cal s:Render(matches, pat)
+		" cal s:Render([a:msg], pat)
+    " echom "err from the handler: " . a:msg
+endfunc
+
+fu! StdoutHandler(channel, msg)
+    let pat = "search str"
+    " echom a:msg 
+    let matches = split(a:msg, ',')
+    " let matches = reverse(matches)
+    " echom len(matches)
+    " echom matches
+    cal s:Render(matches, pat)
+		" cal s:Render([a:msg], pat)
+    " echom "msg from the handler: " . a:msg
+endfunc
+
 fu! s:Update(str)
 	" Get the previous string if existed
 	let oldstr = exists('s:savestr') ? s:savestr : ''
@@ -671,20 +694,36 @@ fu! s:Update(str)
 	if s:validate != '' | let str = call(s:validate, [str]) | en
 	let s:martcs = &scs && str =~ '\u' ? '\C' : ''
 	let pat = s:matcher == {} ? s:SplitPattern(str) : str
-	let lines = s:nolim == 1 && empty(str) ? copy(g:ctrlp_lines)
-		\ : s:MatchedItems(g:ctrlp_lines, pat, s:mw_res)
-	if empty(str) | cal clearmatches() | en
-	cal s:Render(lines, pat)
-	return lines
+	" ilink use socket communication here
+	" and in the callback do s:Render
+
+  let command = "nc -U /home/ilink/.fuz/fuz.sock"
+  let job = job_start(command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
+	let channel = job_getchannel(job)
+
+  " echom str
+  call ch_sendraw(channel, str."\n")
+	" call ch_sendraw(channel, str)
+  " cal s:Render([str], pat)
+
+	" return [""]
+
+	" let lines = s:nolim == 1 && empty(str) ? copy(g:ctrlp_lines)
+	" 	\ : s:MatchedItems(g:ctrlp_lines, pat, s:mw_res)
+	" if empty(str) | cal clearmatches() | en
+	" cal s:Render(lines, pat)
+	" return lines
+	return []
 endf
 
 fu! s:ForceUpdate()
 	let pos = exists('*getcurpos') ? getcurpos() : getpos('.')
-	sil! cal s:Update(escape(s:getinput(), '\'))
+	cal s:Update(escape(s:getinput(), '\'))
 	cal setpos('.', pos)
 endf
 
 fu! s:BuildPrompt(upd)
+  " echom "build prompt"
 	let base = ( s:regexp ? 'r' : '>' ).( s:byfname() ? 'd' : '>' ).'> '
 	let str = escape(s:getinput(), '\')
 	let lazy = str == '' || exists('s:force') || !has('autocmd') ? 0 : s:lazy
@@ -1014,6 +1053,9 @@ fu! s:KeyLoop()
 		el
 			let cmd = matchstr(maparg(chr), ':<C-U>\zs.\+\ze<CR>$')
 			try
+			  if cmd != ''
+			    echom cmd
+        endif
 				exe ( cmd != '' ? cmd : 'norm '.chr )
 			cat
 			endt
@@ -2188,6 +2230,7 @@ fu! s:narrowable()
 endf
 
 fu! s:getinput(...)
+  " echom "getinput " 
 	let [prt, spi] = [s:prompt, ( a:0 ? a:1 : '' )]
 	if s:abbrev != {}
 		let gmd = has_key(s:abbrev, 'gmode') ? s:abbrev['gmode'] : ''
@@ -2559,6 +2602,8 @@ fu! s:CurTypeName()
 	en
 endfu
 
+" ilink this cannot work in this function, needs to be
+" in the callback for the job
 fu! s:ExitIfSingleCandidate()
 	if len(s:Update(s:prompt[0])) == 1
 		call s:AcceptSelection('e')
