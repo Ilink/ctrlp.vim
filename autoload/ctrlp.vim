@@ -701,13 +701,15 @@ fu! s:Update(str)
     let command = "nc -U ".$HOME."/.fuz/fuz.sock"
     let s:fuzdJob = job_start(command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
     let s:fuzdChannel = job_getchannel(s:fuzdJob)
+    echom "PWD=".getcwd()."\n" 
+    call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
   else
     " echom "reusing open channel"
   endif
 
 
   " echom str
-  call ch_sendraw(s:fuzdChannel, str."\n")
+  call ch_sendraw(s:fuzdChannel, "SEARCH=".str."\n")
 	" call ch_sendraw(channel, str)
   " cal s:Render([str], pat)
 
