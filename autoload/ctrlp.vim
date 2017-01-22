@@ -381,37 +381,37 @@ fu! s:Reset(args)
 endf
 " * Files {{{1
 fu! ctrlp#files()
-	let cafile = ctrlp#utils#cachefile()
-	if g:ctrlp_newcache || !filereadable(cafile) || s:nocache(cafile)
-		let [lscmd, s:initcwd, g:ctrlp_allfiles] = [s:lsCmd(), s:dyncwd, []]
-		" Get the list of files
-		if empty(lscmd)
-			if !ctrlp#igncwd(s:dyncwd)
-				cal s:InitCustomFuncs()
-				cal s:GlobPath(s:fnesc(s:dyncwd, 'g', ','), 0)
-				cal s:CloseCustomFuncs()
-			en
-		el
-			sil! cal ctrlp#progress('Indexing...')
-			try | cal s:UserCmd(lscmd)
-			cat | retu [] | endt
-		en
-		" Remove base directory
-		cal ctrlp#rmbasedir(g:ctrlp_allfiles)
-		if len(g:ctrlp_allfiles) <= s:compare_lim
-			cal sort(g:ctrlp_allfiles, 'ctrlp#complen')
-		en
-		cal s:writecache(cafile)
-		let catime = getftime(cafile)
-	el
-		let catime = getftime(cafile)
-		if !( exists('s:initcwd') && s:initcwd == s:dyncwd )
-			\ || get(s:ficounts, s:dyncwd, [0, catime])[1] != catime
-			let s:initcwd = s:dyncwd
-			let g:ctrlp_allfiles = ctrlp#utils#readfile(cafile)
-		en
-	en
-	cal extend(s:ficounts, { s:dyncwd : [len(g:ctrlp_allfiles), catime] })
+	" let cafile = ctrlp#utils#cachefile()
+	" if g:ctrlp_newcache || !filereadable(cafile) || s:nocache(cafile)
+	" 	let [lscmd, s:initcwd, g:ctrlp_allfiles] = [s:lsCmd(), s:dyncwd, []]
+	" 	" Get the list of files
+	" 	if empty(lscmd)
+	" 		if !ctrlp#igncwd(s:dyncwd)
+	" 			cal s:InitCustomFuncs()
+	" 			cal s:GlobPath(s:fnesc(s:dyncwd, 'g', ','), 0)
+	" 			cal s:CloseCustomFuncs()
+	" 		en
+	" 	el
+	" 		sil! cal ctrlp#progress('Indexing...')
+	" 		try | cal s:UserCmd(lscmd)
+	" 		cat | retu [] | endt
+	" 	en
+	" 	" Remove base directory
+	" 	cal ctrlp#rmbasedir(g:ctrlp_allfiles)
+	" 	if len(g:ctrlp_allfiles) <= s:compare_lim
+	" 		cal sort(g:ctrlp_allfiles, 'ctrlp#complen')
+	" 	en
+	" 	cal s:writecache(cafile)
+	" 	let catime = getftime(cafile)
+	" el
+	" 	let catime = getftime(cafile)
+	" 	if !( exists('s:initcwd') && s:initcwd == s:dyncwd )
+	" 		\ || get(s:ficounts, s:dyncwd, [0, catime])[1] != catime
+	" 		let s:initcwd = s:dyncwd
+	" 		let g:ctrlp_allfiles = ctrlp#utils#readfile(cafile)
+	" 	en
+	" en
+	" cal extend(s:ficounts, { s:dyncwd : [len(g:ctrlp_allfiles), catime] })
 	retu g:ctrlp_allfiles
 endf
 
