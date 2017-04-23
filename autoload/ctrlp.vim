@@ -696,12 +696,16 @@ fu! s:Update(str)
 	if s:validate != '' | let str = call(s:validate, [str]) | en
 	let s:martcs = &scs && str =~ '\u' ? '\C' : ''
 	let pat = s:matcher == {} ? s:SplitPattern(str) : str
+	let s:fuz_home=$HOME."/.fuz"
+	if !empty($FUZ_HOME)
+	  let s:fuz_home = $FUZ_HOME
+  endif
   
+  echom "fuz home=".s:fuz_home
   if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
-    let command = "nc -U ".$HOME."/.fuz/fuz.sock"
-    let s:fuzdJob = job_start(command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
+    let s:command = "nc -U ".s:fuz_home."/fuz.sock"
+    let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
     let s:fuzdChannel = job_getchannel(s:fuzdJob)
-    echom "PWD=".getcwd()."\n" 
     call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
   else
     " echom "reusing open channel"
