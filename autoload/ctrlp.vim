@@ -164,6 +164,12 @@ let s:ficounts = {}
 let s:fuzdJob = 0
 let s:fuzdChannel = 0
 
+if empty($FUZ_HOME)
+  let s:fuz_home = $HOME."/.fuz"
+else
+  let s:fuz_home = $FUZ_HOME
+endif
+
 let s:ccex = s:pref.'clear_cache_on_exit'
 
 " Regexp
@@ -701,10 +707,6 @@ fu! s:Update(str)
 	if s:validate != '' | let str = call(s:validate, [str]) | en
 	let s:martcs = &scs && str =~ '\u' ? '\C' : ''
 	let pat = s:matcher == {} ? s:SplitPattern(str) : str
-	let s:fuz_home=$HOME."/.fuz"
-	if !empty($FUZ_HOME)
-	  let s:fuz_home = $FUZ_HOME
-  endif
  
   call s:send_fuzd_msg("SEARCH=".str."\n")
   " " echom "fuz home=".s:fuz_home
