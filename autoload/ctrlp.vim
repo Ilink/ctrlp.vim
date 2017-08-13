@@ -163,6 +163,7 @@ en
 let s:ficounts = {}
 let s:fuzdJob = 0
 let s:fuzdChannel = 0
+let s:fuzdInit=0
 
 if empty($FUZ_HOME)
   let s:fuz_home = $HOME."/.fuz"
@@ -365,14 +366,12 @@ fu! s:Close()
 endf
 
 fu! s:send_fuzd_msg(msg)
-    " echom "fuz home=".s:fuz_home
-    if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
+    if !s:fuzdInit || ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
       let s:command = "nc -U ".s:fuz_home."/fuz.sock"
       let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
       let s:fuzdChannel = job_getchannel(s:fuzdJob)
+      let s:fuzdInit = 1
       call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
-    else
-      " echom "reusing open channel"
     endif
     call ch_sendraw(s:fuzdChannel, a:msg)
 endf
@@ -707,7 +706,7 @@ fu! s:Update(str)
 	if s:validate != '' | let str = call(s:validate, [str]) | en
 	let s:martcs = &scs && str =~ '\u' ? '\C' : ''
 	let pat = s:matcher == {} ? s:SplitPattern(str) : str
- 
+
   call s:send_fuzd_msg("SEARCH=".str."\n")
   " " echom "fuz home=".s:fuz_home
   " if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
