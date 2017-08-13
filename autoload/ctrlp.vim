@@ -701,7 +701,7 @@ fu! s:Update(str)
 	  let s:fuz_home = $FUZ_HOME
   endif
   
-  echom "fuz home=".s:fuz_home
+  " echom "fuz home=".s:fuz_home
   if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
     let s:command = "nc -U ".s:fuz_home."/fuz.sock"
     let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
@@ -2682,4 +2682,3 @@ fu! s:autocmds()
 endf
 "}}}
 
-" vim:fen:fdm=marker:fmr={{{,}}}:fdl=0:fdc=1:ts=2:sw=2:sts=2
