@@ -24,10 +24,10 @@ com! -bar CtrlPBuffer   cal ctrlp#init('buf')
 com! -n=? CtrlPLastMode cal ctrlp#init(-1, { 'args': <q-args> })
 
 com! -bar CtrlPClearCache     cal ctrlp#clr()
-com! -bar CtrlPClearAllCaches cal ctrlp#clra()
+" com! -bar CtrlPClearAllCaches cal ctrlp#clra()
 
 com! -bar ClearCtrlPCache     cal ctrlp#clr()
-com! -bar ClearAllCtrlPCaches cal ctrlp#clra()
+" com! -bar ClearAllCtrlPCaches cal ctrlp#clra()
 
 com! -bar CtrlPCurWD   cal ctrlp#init('fil', { 'mode': '' })
 com! -bar CtrlPCurFile cal ctrlp#init('fil', { 'mode': 'c' })

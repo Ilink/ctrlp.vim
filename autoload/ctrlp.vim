@@ -357,19 +357,24 @@ fu! s:Close()
 	let v:errmsg = s:ermsg
 	ec
 endf
-" * Clear caches {{{1
-fu! ctrlp#clr(...)
-	let [s:matches, g:ctrlp_new{ a:0 ? a:1 : 'cache' }] = [1, 1]
+
+fu! s:send_fuzd_msg(msg)
+    " echom "fuz home=".s:fuz_home
+    if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
+      let s:command = "nc -U ".s:fuz_home."/fuz.sock"
+      let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
+      let s:fuzdChannel = job_getchannel(s:fuzdJob)
+      call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
+    else
+      " echom "reusing open channel"
+    endif
+    call ch_sendraw(s:fuzdChannel, a:msg)
 endf
 
-fu! ctrlp#clra()
-	let cadir = ctrlp#utils#cachedir()
-	if isdirectory(cadir)
-		let cafiles = split(s:glbpath(s:fnesc(cadir, 'g', ','), '**', 1), "\n")
-		let eval = '!isdirectory(v:val) && v:val !~ ''\v[\/]cache[.a-z]+$|\.log$'''
-		sil! cal map(s:ifilter(cafiles, eval), 'delete(v:val)')
-	en
-	cal ctrlp#clr()
+
+" * Clear caches {{{1
+fu! ctrlp#clr(...)
+    call s:send_fuzd_msg("REFRESH\n")
 endf
 
 fu! s:Reset(args)
@@ -700,20 +705,21 @@ fu! s:Update(str)
 	if !empty($FUZ_HOME)
 	  let s:fuz_home = $FUZ_HOME
   endif
-  
-  " echom "fuz home=".s:fuz_home
-  if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
-    let s:command = "nc -U ".s:fuz_home."/fuz.sock"
-    let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
-    let s:fuzdChannel = job_getchannel(s:fuzdJob)
-    call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
-  else
-    " echom "reusing open channel"
-  endif
-
-
-  " echom str
-  call ch_sendraw(s:fuzdChannel, "SEARCH=".str."\n")
+ 
+  call s:send_fuzd_msg("SEARCH=".str."\n")
+  " " echom "fuz home=".s:fuz_home
+  " if ch_status(s:fuzdChannel) != "open" || job_status(s:fuzdJob) != "run" 
+  "   let s:command = "nc -U ".s:fuz_home."/fuz.sock"
+  "   let s:fuzdJob = job_start(s:command, {"out_cb": "StdoutHandler", "err_cb": "StderrHandler"})
+  "   let s:fuzdChannel = job_getchannel(s:fuzdJob)
+  "   call ch_sendraw(s:fuzdChannel, "PWD=".getcwd()."\n")
+  " else
+  "   " echom "reusing open channel"
+  " endif
+  "
+  "
+  " " echom str
+  " call ch_sendraw(s:fuzdChannel, "SEARCH=".str."\n")
 	" call ch_sendraw(channel, str)
   " cal s:Render([str], pat)
 
